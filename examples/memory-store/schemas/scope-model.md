@@ -12,6 +12,13 @@ Scope determines where a memory is valid and how it should be prioritized.
 - `repo:agent-agents`
 - `global`
 
+## Universal vs scoped truth
+
+- Use `global` for truths intended to apply across environments.
+- Use `machine:<name>` for machine-specific environment facts.
+- Use `workspace:<path>` or `repo:<name>` for project-specific facts.
+- Do not mark a memory global merely because it is currently true in one environment.
+
 ## Rules
 
 - Prefer narrower, confirmed scope over broader generic scope.

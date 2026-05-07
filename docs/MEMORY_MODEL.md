@@ -254,6 +254,23 @@ This means a long break should not erase continuity by itself.
 Memory should tell the system what matters.
 Library should help the system look things up.
 
+## Universal vs Environmental Truth
+
+The model distinguishes broad truth from scoped truth through **scope** and **truth class**.
+
+- Universal or broadly portable truths should usually use `scope: ["global"]` and a truth class such as `policy`, `preference`, or `decision` when they affect agent behavior across environments.
+- Environmental truths should use `truth_class: "environment"` and explicit scopes such as `machine:<name>`, `workspace:<path>`, or `repo:<name>`.
+- Project truths should use `truth_class: "project"` and a workspace/repo scope.
+- Operational truths should be scoped to the session, workspace, project, or machine where they are actually valid.
+
+Do not promote an environment-specific fact as global just because it is currently true. A memory that is correct in one machine, repo, or workflow can become actively harmful if retrieved as universal truth elsewhere.
+
+Quick test:
+- "Always ask before deleting user data" -> global policy
+- "This repo uses pnpm" -> project/workspace fact
+- "This machine stores runtime memory under `~/.agent-memory/`" -> machine/environment fact
+- "The current task is debugging retrieval" -> operational workspace/session fact
+
 ## Boundary with Broader Knowledge Model
 
 This memory model is not the entire future truth/knowledge architecture.
@@ -291,6 +308,3 @@ It is a secondary semantic axis used to:
 
 Subject derivation should remain explicit, shared, and conservative.
 Do not let every subsystem invent its own incompatible subject semantics.
-
-
-Test
