@@ -86,6 +86,10 @@ Keep the pattern. Replace the people.
 - Runtime is disposable; source is reviewable.
 - External indexes can help retrieval, but canonical truth stays in the memory corpus.
 
+## License
+
+This project is licensed under the Apache License 2.0. See [`LICENSE`](LICENSE).
+
 ## Status
 
 This is an initial sanitized template extracted from a working private system. Treat it as a strong starting point, not a finished public product.

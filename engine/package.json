@@ -2,7 +2,7 @@
   "name": "@agent-memory/template-engine",
   "version": "0.1.0",
   "description": "A template memory engine for agent continuity: staged capture, explicit promotion, bounded retrieval, and policy-aware lifecycle management.",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "private": false,
   "type": "module",
   "scripts": {
