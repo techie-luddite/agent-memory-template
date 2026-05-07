@@ -1,6 +1,10 @@
 # Agent Memory Template
 
-A safe, publishable template for durable agent memory: compact authored truths, explicit staging and promotion, bounded retrieval, and clear separation between source and runtime state.
+A portable memory governance layer for AI agents: reviewed capture, explicit promotion, bounded retrieval, scoped truth, and durable continuity.
+
+LLMs know a vast amount about the world in general, but almost nothing about the specific person, project, environment, constraints, decisions, and history in front of them. That mismatch produces generic advice, repeated context-setting, forgotten decisions, and local facts treated as universal truth.
+
+Agent Memory Template is a small, local-first reference implementation for fixing that gap without turning memory into surveillance, raw transcript hoarding, or vector database soup.
 
 This is a **template**, not a personal memory dump. It includes a TypeScript memory engine, example corpus records, and design documents you can adapt for your own agent workflow.
 
@@ -54,6 +58,15 @@ npm exec -- agent-memory session-startup \
   --workspace /path/to/example-project \
   --session sess-123 \
   --query "what is the current focus?"
+
+# render a prompt-friendly packet
+npm exec -- agent-memory packet \
+  --workspace /path/to/example-project \
+  --query "what is the current focus?" \
+  --format markdown
+
+# inspect store health
+npm exec -- agent-memory doctor
 ```
 
 If you want the `agent-memory` command directly on your PATH from a checkout:
@@ -89,6 +102,8 @@ MEMORY_ROOT=examples/memory-store npm exec -- agent-memory retrieve --query "cur
 - session startup / record / end commands for agent integration
 - `agent-memory` CLI bin wrapper
 - `agent-memory init` for fresh runtime store setup
+- `agent-memory doctor` for store health checks
+- `agent-memory packet --format markdown` for prompt-friendly context packets
 - isolated smoke test that uses temporary `HOME` and `MEMORY_ROOT`
 - optional derived Markdown export hooks for external retrieval indexes
 

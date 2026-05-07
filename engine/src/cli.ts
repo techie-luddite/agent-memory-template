@@ -1,6 +1,6 @@
 import os from "node:os";
 import path from "node:path";
-import { readFile } from "node:fs/promises";
+import { access, readdir, readFile } from "node:fs/promises";
 import { loadMemoryRecords } from "./load/loadMemoryRecords.js";
 import { withMemoryLock } from "./lock/withMemoryLock.js";
 import { createMemoryItemValidator, validateMemoryCorpus, validateMemoryItem } from "./validate/validateMemoryItem.js";
@@ -130,6 +130,183 @@ async function indexCommand(): Promise<number> {
     console.log(`rebuilt indexes for ${records.length} memory records from ${root}`);
     return 0;
   });
+}
+
+async function pathExists(target: string): Promise<boolean> {
+  try {
+    await access(target);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function doctorCommand(): Promise<number> {
+  const root = getMemoryRoot();
+  const requiredSchemas = [
+    "candidate.schema.json",
+    "event.schema.json",
+    "memory-item.schema.json",
+    "retrieval-packet.schema.json"
+  ];
+  const requiredDirs = [
+    "active",
+    "durable",
+    "suppressed",
+    "staging/events",
+    "staging/candidates",
+    "schemas",
+    "indexes"
+  ];
+  const indexFiles = [
+    "active-manifest.json",
+    "durable-manifest.json",
+    "suppressed-manifest.json",
+    "by-scope.json",
+    "by-subject.json",
+    "by-truth-class.json"
+  ];
+
+  const missingDirs: string[] = [];
+  for (const dir of requiredDirs) {
+    if (!(await pathExists(path.join(root, dir)))) missingDirs.push(dir);
+  }
+
+  const missingSchemas: string[] = [];
+  for (const schema of requiredSchemas) {
+    if (!(await pathExists(path.join(root, "schemas", schema)))) missingSchemas.push(schema);
+  }
+
+  const missingIndexes: string[] = [];
+  for (const indexFile of indexFiles) {
+    if (!(await pathExists(path.join(root, "indexes", indexFile)))) missingIndexes.push(indexFile);
+  }
+
+  const { records, errors: loadErrors } = await loadMemoryRecords(root);
+  const validationErrors = missingSchemas.length === 0
+    ? await collectValidationErrors(root, records, loadErrors)
+    : [...loadErrors, ...missingSchemas.map((schema) => `missing schema: ${schema}`)];
+
+  const stagedEvents = await readdir(path.join(root, "staging", "events")).catch(() => []);
+  const stagedCandidates = await readdir(path.join(root, "staging", "candidates")).catch(() => []);
+  const qmdRuntimeRoot = process.env.QMD_RUNTIME_ROOT ?? path.join(os.homedir(), ".agent-memory", "runtime", "qmd-runtime");
+
+  const checks = {
+    memory_root_exists: await pathExists(root),
+    required_directories_present: missingDirs.length === 0,
+    schemas_present: missingSchemas.length === 0,
+    corpus_valid: validationErrors.length === 0,
+    indexes_present: missingIndexes.length === 0,
+    qmd_runtime_present: await pathExists(qmdRuntimeRoot)
+  };
+
+  const warnings = [
+    ...(missingIndexes.length > 0 ? [`indexes missing or incomplete: ${missingIndexes.join(", ")}; run agent-memory index`] : []),
+    ...(stagedCandidates.length > 0 ? [`${stagedCandidates.length} staged candidate(s) waiting for review/promotion`] : []),
+    ...(!checks.qmd_runtime_present ? ["optional QMD runtime not found; qmd-retrieve will be unavailable unless configured"] : [])
+  ];
+
+  const errors = [
+    ...(missingDirs.length > 0 ? [`missing required directories: ${missingDirs.join(", ")}; run agent-memory init`] : []),
+    ...(missingSchemas.length > 0 ? [`missing required schemas: ${missingSchemas.join(", ")}; run agent-memory init`] : []),
+    ...validationErrors
+  ];
+
+  console.log(JSON.stringify({
+    ok: errors.length === 0,
+    memory_root: root,
+    checks,
+    counts: {
+      records: records.length,
+      staged_events: stagedEvents.filter((name) => name.endsWith(".json")).length,
+      staged_candidates: stagedCandidates.filter((name) => name.endsWith(".json")).length
+    },
+    warnings,
+    errors
+  }, null, 2));
+
+  return errors.length === 0 ? 0 : 1;
+}
+
+function renderPacketMarkdown(packet: ReturnType<typeof buildRetrievalPacket>): string {
+  const lines: string[] = [];
+  lines.push("# Agent memory packet");
+  lines.push("");
+  lines.push(`Query: ${packet.query || "(none)"}`);
+  lines.push("");
+  lines.push("## Scope");
+  lines.push(...(packet.scope.length > 0 ? packet.scope.map((scope) => `- ${scope}`) : ["- global / unspecified"]));
+
+  const section = (title: string, items: typeof packet.active) => {
+    lines.push("");
+    lines.push(`## ${title}`);
+    if (items.length === 0) {
+      lines.push("- none");
+      return;
+    }
+    for (const item of items) {
+      lines.push(`- ${item.summary}`);
+      lines.push(`  - id: ${item.id}`);
+      lines.push(`  - truth_class: ${item.truth_class}`);
+      if (item.subject) lines.push(`  - subject: ${item.subject}`);
+      lines.push(`  - scope: ${item.scope.join(", ") || "none"}`);
+    }
+  };
+
+  section("Active", packet.active);
+  section("Durable", packet.durable);
+  section("Policies", packet.policies);
+
+  if (packet.notes) {
+    lines.push("");
+    lines.push("## Notes");
+    lines.push(packet.notes);
+  }
+
+  return `${lines.join("\n")}\n`;
+}
+
+async function packetCommand(args: string[]): Promise<number> {
+  const root = getMemoryRoot();
+  const workspace = parseFlag(args, "--workspace") ?? null;
+  const query = parseFlag(args, "--query") ?? "";
+  const extraScopes = parseListFlag(args, "--extra-scopes");
+  const format = parseFlag(args, "--format") ?? "json";
+  const limit = parseInt(parseFlag(args, "--limit") ?? "8", 10);
+  const activeLimit = parseInt(parseFlag(args, "--active-limit") ?? "4", 10);
+  const durableLimit = parseInt(parseFlag(args, "--durable-limit") ?? "4", 10);
+  const policyLimit = parseInt(parseFlag(args, "--policy-limit") ?? "3", 10);
+
+  if (!["json", "markdown", "md"].includes(format)) {
+    console.error("packet --format must be one of: json, markdown");
+    return 1;
+  }
+
+  const scopes = deriveSessionScopes({ workspace, extraScopes });
+  const { records, errors } = await loadMemoryRecords(root);
+  if (errors.length > 0) {
+    for (const error of errors) console.error(error);
+    console.error(`packet aborted due to ${errors.length} load error(s)`);
+    return 1;
+  }
+
+  const filtered = records
+    .map((record) => record.item)
+    .filter((record) => matchScopes(record.scope, scopes));
+
+  const retrievalSet = buildRetrievalSet(filtered, {
+    limit,
+    activeLimit,
+    durableLimit,
+    policyLimit,
+    requestedScopes: scopes,
+    query,
+    includeSuppressed: false
+  });
+
+  const packet = buildRetrievalPacket(query, scopes, retrievalSet);
+  console.log(format === "json" ? JSON.stringify(packet, null, 2) : renderPacketMarkdown(packet));
+  return 0;
 }
 
 async function retrieveCommand(args: string[]): Promise<number> {
@@ -1191,6 +1368,10 @@ export async function main(args: string[] = process.argv.slice(2)): Promise<numb
       return indexCommand();
     case "retrieve":
       return retrieveCommand(rest);
+    case "packet":
+      return packetCommand(rest);
+    case "doctor":
+      return doctorCommand();
     case "session-startup":
       return sessionStartupCommand(rest);
     case "session-record":
@@ -1237,9 +1418,11 @@ export async function main(args: string[] = process.argv.slice(2)): Promise<numb
           "  corpus management:",
           "    validate",
           "    index",
+          "    doctor",
           "",
           "  retrieval:",
           "    retrieve [--query <text>] [--scope <a,b,c>] [--include-suppressed]",
+          "    packet [--query <text>] [--workspace <path>] [--extra-scopes <a,b>] [--format json|markdown]",
           "",
           "  explainability:",
           "    explain-retrieval [--query <text>] [--scope <a,b,c>] [--include-suppressed] [--limit n] [--active-limit n] [--durable-limit n] [--policy-limit n]",

@@ -28,11 +28,13 @@ function run(args, options = {}) {
 try {
   run(["init"]);
   run(["validate"]);
+  run(["doctor"]);
   run(["session-startup", "--workspace", path.join(temp, "project"), "--session", "sess-smoke", "--query", "what is the current focus?"]);
   run(["session-record", "--type", "decision", "--summary", "Use the portable agent-memory CLI for lifecycle integration.", "--workspace", path.join(temp, "project"), "--session", "sess-smoke", "--tags", "example,integration"]);
   run(["session-end", "--session", "sess-smoke"]);
   run(["validate"]);
   run(["retrieve", "--query", "portable lifecycle integration", "--scope", `workspace:${path.join(temp, "project")}`]);
+  run(["packet", "--query", "portable lifecycle integration", "--workspace", path.join(temp, "project"), "--format", "markdown"]);
   console.log(JSON.stringify({ ok: true, isolated_home: home, isolated_memory_root: memoryRoot }, null, 2));
 } finally {
   if (!process.env.AGENT_MEMORY_KEEP_ISOLATED_SMOKE) {
