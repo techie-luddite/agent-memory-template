@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent.local/schemas/candidate.schema.json",
+  "title": "Skynet Memory Candidate",
+  "type": "object",
+  "required": [
+    "id",
+    "derived_from",
+    "truth_class",
+    "scope",
+    "summary",
+    "assertion",
+    "confidence",
+    "significance",
+    "status",
+    "created_at"
+  ],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "derived_from": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": { "type": "string" }
+    },
+    "truth_class": {
+      "type": "string",
+      "enum": [
+        "preference",
+        "environment",
+        "project",
+        "operational",
+        "relationship",
+        "policy",
+        "decision"
+      ]
+    },
+    "scope": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    },
+    "summary": { "type": "string", "minLength": 1 },
+    "assertion": { "type": "string", "minLength": 1 },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "significance": { "type": "number", "minimum": 0, "maximum": 1 },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "promoted-active", "promoted-durable", "discarded", "suppressed"]
+    },
+    "notes": { "type": ["string", "null"] },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

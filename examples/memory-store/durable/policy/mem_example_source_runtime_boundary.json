@@ -1,0 +1,29 @@
+{
+  "id": "mem_example_source_runtime_boundary",
+  "state": "durable",
+  "truth_class": "policy",
+  "scope": ["global"],
+  "subject": "source-runtime-boundary",
+  "summary": "Source, runtime, and upstream/reference surfaces must stay separate.",
+  "assertion": "Authored files belong in source control, generated runtime state belongs under the configured runtime root, and upstream/reference clones should not be treated as writable runtime or canonical source.",
+  "confidence": 1,
+  "importance": 0.95,
+  "retrieval_weight": 0.95,
+  "status": "confirmed",
+  "source": {
+    "type": "example",
+    "session": null,
+    "evidence": ["Seed example record for template users."]
+  },
+  "created_at": "2026-01-01T00:00:00.000Z",
+  "updated_at": "2026-01-01T00:00:00.000Z",
+  "last_reinforced_at": null,
+  "last_reinforced_in_session": null,
+  "reinforcement_count": 0,
+  "review_after_sessions": null,
+  "review_after_interactions": null,
+  "activity_state": null,
+  "supersedes": [],
+  "superseded_by": null,
+  "tags": ["example", "boundary", "runtime-hygiene"]
+}

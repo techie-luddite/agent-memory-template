@@ -1,0 +1,29 @@
+{
+  "id": "mem_example_current_focus",
+  "state": "active",
+  "truth_class": "operational",
+  "scope": ["workspace:/path/to/example-project"],
+  "subject": "current-focus",
+  "summary": "Current focus is wiring a safe memory template into the agent session loop.",
+  "assertion": "The current work is to validate capture, promotion, retrieval, and session-end maintenance against a disposable example corpus.",
+  "confidence": 0.9,
+  "importance": 0.8,
+  "retrieval_weight": 0.9,
+  "status": "confirmed",
+  "source": {
+    "type": "example",
+    "session": null,
+    "evidence": ["Seed example record for template users."]
+  },
+  "created_at": "2026-01-01T00:00:00.000Z",
+  "updated_at": "2026-01-01T00:00:00.000Z",
+  "last_reinforced_at": null,
+  "last_reinforced_in_session": null,
+  "reinforcement_count": 0,
+  "review_after_sessions": 3,
+  "review_after_interactions": 20,
+  "activity_state": "open",
+  "supersedes": [],
+  "superseded_by": null,
+  "tags": ["example", "session-loop"]
+}

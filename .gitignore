@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+.env
+.DS_Store
+
+# Runtime stores belong outside source by default
+.agent-memory/runtime/
+.agent-memory/memory/

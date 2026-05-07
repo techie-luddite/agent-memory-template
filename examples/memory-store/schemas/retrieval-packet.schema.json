@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent.local/schemas/retrieval-packet.schema.json",
+  "title": "Skynet Retrieval Packet",
+  "type": "object",
+  "required": ["query", "scope", "active", "durable", "policies"],
+  "properties": {
+    "query": { "type": "string" },
+    "scope": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "active": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/packetItem" }
+    },
+    "durable": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/packetItem" }
+    },
+    "policies": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/packetItem" }
+    },
+    "suppressed_considered": { "type": "boolean" },
+    "notes": { "type": ["string", "null"] }
+  },
+  "$defs": {
+    "packetItem": {
+      "type": "object",
+      "required": ["id", "summary", "truth_class", "subject", "scope", "status"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 },
+        "truth_class": {
+          "type": "string",
+          "enum": [
+            "preference",
+            "environment",
+            "project",
+            "operational",
+            "relationship",
+            "policy",
+            "decision"
+          ]
+        },
+        "subject": { "type": ["string", "null"] },
+        "scope": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "status": {
+          "type": "string",
+          "enum": ["candidate", "confirmed", "superseded", "invalid", "inactive"]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
