@@ -1,0 +1,43 @@
+{
+  "name": "agent-memory-template",
+  "version": "0.1.0",
+  "description": "A portable memory engine template for AI agents: reviewed capture, explicit promotion, bounded retrieval, and durable continuity.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "agent-memory": "bin/agent-memory.mjs"
+  },
+  "workspaces": [
+    "engine"
+  ],
+  "scripts": {
+    "build": "npm --workspace engine run build",
+    "test": "npm --workspace engine test",
+    "agent-memory": "node bin/agent-memory.mjs",
+    "validate:example": "MEMORY_ROOT=examples/memory-store node bin/agent-memory.mjs validate",
+    "smoke:isolated": "node scripts/isolated-smoke.mjs",
+    "prepare": "npm run build"
+  },
+  "files": [
+    "bin/",
+    "docs/",
+    "engine/dist/",
+    "engine/package.json",
+    "examples/",
+    "LICENSE",
+    "README.md",
+    "NOTICE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "ajv": "^8.18.0",
+    "ajv-formats": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "typescript": "^5.8.3"
+  }
+}

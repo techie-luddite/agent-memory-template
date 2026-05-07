@@ -38,11 +38,42 @@ Runtime data should live outside the repo by default:
 ## Quick start
 
 ```bash
-cd engine
+git clone <repo-url> agent-memory-template
+cd agent-memory-template
 npm install
 npm run build
-MEMORY_ROOT=../examples/memory-store npm run memory:validate
-MEMORY_ROOT=../examples/memory-store node dist/src/cli.js retrieve --query "current focus" --workspace /path/to/example-project
+
+# create a fresh runtime memory store at ~/.agent-memory/memory
+npm exec -- agent-memory init
+
+# validate the store
+npm exec -- agent-memory validate
+
+# retrieve context for a project/session
+npm exec -- agent-memory session-startup \
+  --workspace /path/to/example-project \
+  --session sess-123 \
+  --query "what is the current focus?"
+```
+
+If you want the `agent-memory` command directly on your PATH from a checkout:
+
+```bash
+npm install -g .
+agent-memory init
+```
+
+You can test without touching your real home directory or memory store:
+
+```bash
+npm run smoke:isolated
+```
+
+For the included fake corpus:
+
+```bash
+MEMORY_ROOT=examples/memory-store npm exec -- agent-memory validate
+MEMORY_ROOT=examples/memory-store npm exec -- agent-memory retrieve --query "current focus" --scope workspace:/path/to/example-project
 ```
 
 ## What this template includes
@@ -56,6 +87,9 @@ MEMORY_ROOT=../examples/memory-store node dist/src/cli.js retrieve --query "curr
 - manifest/index rebuilding
 - retrieval, promotion, and reconciliation explanation commands
 - session startup / record / end commands for agent integration
+- `agent-memory` CLI bin wrapper
+- `agent-memory init` for fresh runtime store setup
+- isolated smoke test that uses temporary `HOME` and `MEMORY_ROOT`
 - optional derived Markdown export hooks for external retrieval indexes
 
 ## Optional QMD integration
@@ -92,6 +126,6 @@ This project is licensed under the Apache License 2.0. See [`LICENSE`](LICENSE).
 
 ## Status
 
-This is an initial sanitized template extracted from a working private system. Treat it as a strong starting point, not a finished public product.
+This is a usable developer template with a portable CLI and isolated smoke test. It is intentionally agent-neutral rather than tied to one coding-agent runtime.
 
 Aye, still mind the sharp edges. The useful bit is the architecture; adapt it deliberately.
